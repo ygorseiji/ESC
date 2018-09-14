@@ -1,0 +1,48 @@
+// if (zx == 1) set x = 0        // constante de 16-bit
+// if (nx == 1) set x = !x       // nega o x
+// if (zy == 1) set y = 0        // contante de 16-bit
+// if (ny == 1) set y = !y       // nega o y
+// if (f == 1)  set out = x + y  // soma de dois inteiros bit
+// if (f == 0)  set out = x & y  // faz um and
+// if (no == 1) set out = !out   // nega a saida
+// if (out == 0) set zr = 1
+// if (out < 0) set ng = 1 //verifica de o bit 15 é igual a 1
+
+CHIP ALU {
+    IN
+        x[16], y[16],  // entrada de 16-bit
+        zx, // zera a entrada x
+        nx, // nega a entrada x
+        zy, // zera a entrada y
+        ny, // nega a entrada y input?
+        f,  // computa out = x + y (if 1) or x & y (if 0)
+        no; // nega a saida out
+
+    OUT
+        out[16], //saida de 16-bit
+        zr, //recebe 1 se (out == 0), recebe 0 pra outras saida
+        ng; //recebe 1 se (out < 0),  recebe 0 pra outras saida
+
+        PARTS:
+            Mux16 (a=x, b=false, sel=zx, out=zeraX);
+            Mux16 (a=y, b=false, sel=zy, out=zeraY);
+
+            Not16 (in=zeraX, out=compdX);
+            Not16 (in=zeraY, out=compdY);
+
+            Mux16 (a=zeraX, b=compdX, sel=nx, out=newX);
+            Mux16 (a=zeraY, b=compdY, sel=ny, out=newY);
+
+            Add16 (a=newX, b=newY, out=soma);
+            And16 (a=newX, b=newY, out=and);
+
+            Mux16 (a=and, b=soma, sel=f, out=saida);
+            Not16 (in=saida, out=ComplementoDaSaida);
+
+            Mux16 (a=saida, b=ComplementoDaSaida, sel=no,  out=out, out[15]=ng, out[0..7]=Bit0ao7, out[8..15]=Bit8ao15);
+
+            Or8Way (in=Bit0ao7, out=Or1);
+            Or8Way (in=Bit8ao15, out=Oreo);
+            Or(a=Or1, b=Oreo, out=or16Bits);
+            Not (in=or16Bits, out=zr);
+  }

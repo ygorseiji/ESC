@@ -1,0 +1,11 @@
+//Calcula a soma de dois bits
+
+CHIP HalfAdder {
+    IN a, b;    // 1-entrada do bit
+    OUT sum,    // bit da direita de a + b
+        carry;  // bit da esquerda de a + b algebra booleana
+
+    PARTS:
+    Xor (a=a, b=b, out=sum);
+    And (a=a, b=b, out=carry);
+}

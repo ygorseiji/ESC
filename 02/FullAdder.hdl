@@ -1,0 +1,13 @@
+//Calcula a soma de tres bits.
+
+
+CHIP FullAdder {
+    IN a, b, c;  // 1-bit entrada
+    OUT sum,     // soma da direta a + b + c
+        carry;   //  a + b + c
+
+    PARTS:
+    HalfAdder (a=a, b=b, sum=partialSum, carry=firstCarry);
+    HalfAdder (a=c, b=partialSum, sum=sum, carry=SecondCarry);
+    Or (a=firstCarry, b=SecondCarry, out=carry);
+}
