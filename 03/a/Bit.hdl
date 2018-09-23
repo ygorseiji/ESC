@@ -1,0 +1,13 @@
+
+// Nos chips com clock, podemos usar vários `out` e aqueles múltiplos` out`
+//Pense nas variáveis ​​intermediárias como inicializadas com um valor 0
+
+CHIP Bit {
+    IN in, load;
+    OUT out;
+
+    PARTS:
+    Mux (a=prevResult, b=in, sel=load, out=result);
+    DFF (in=result, out=prevResult);
+    DFF (in=result, out=out);
+}
