@@ -1,0 +1,71 @@
+
+
+CHIP CPU {
+
+    IN  inM[16],         // M value input  (M = contents of RAM[A])
+        instruction[16], // Instruction for execution
+        reset;           // Signals whether to re-start the current
+                         // program (reset==1) or continue executing
+                         // the current program (reset==0).
+
+    OUT outM[16],        // M value output
+        writeM,          // Write to M?
+        addressM[15],    // Address in data memory (of M)
+        pc[15];          // address of next instruction
+
+    PARTS:
+
+    And (a=true, b=instruction[15], out=isInstructionC);
+    Not (in=isInstructionC, out=isInstructionA);
+
+    
+    Or (a=instruction[12], b=false, out=inputType);
+
+    Or (a=instruction[11], b=false, out=zx);
+    Or (a=instruction[10], b=false, out=nx);
+    Or (a=instruction[9], b=false, out=zy);
+    Or (a=instruction[8], b=false, out=ny);
+    Or (a=instruction[7], b=false, out=f);
+    Or (a=instruction[6], b=false, out=no);
+
+    And (a=instruction[5], b=isInstructionC, out=storeInA);
+    And (a=instruction[4], b=isInstructionC, out=storeInD);
+    And (a=instruction[3], b=isInstructionC, out=writeM);
+
+
+    Not (in=true, out=nojmp);
+
+    Not (in=false, out=jmp);
+
+    And (a=true, b=zr, out=jeq);
+
+    And (a=true, b=ng, out=jlt);
+  
+    Not (in=zr, out=jne);
+  
+    Not (in=jle, out=jgt);
+
+    Or (a=zr, b=jgt, out=jge);
+
+    Or (a=zr, b=ng, out=jle);
+
+    Mux8Way (a=nojmp, b=jgt, c=jeq, d=jge, e=jlt, f=jne, g=jle, h=jmp, sel=instruction[0..2], out=maybeJump);
+    And (a=isInstructionC, b=maybeJump, out=shouldJump);
+
+  
+    Mux16 (a=outALU, b=instruction, sel=isInstructionA, out=registerAVal);
+ 
+    Or (a=isInstructionA, b=storeInA, out=shouldLoadA);
+    Register (in=registerAVal, load=shouldLoadA, out=registerA, out[0..14]=addressM);
+
+    Register (in=outALU, load=storeInD, out=registerD);
+    Mux16 (a=registerA, b=inM, sel=inputType, out=inputALU);
+
+    ALU (x=registerD, y=inputALU, zx=zx, nx=nx, zy=zy ,ny=ny ,f=f ,no=no, zr=zr, ng=ng, out=outALU);
+
+    Or16 (a=false, b=outALU, out=outM);
+
+    
+    PC (in=registerA,load=shouldJump,inc=true,reset=reset, out[0..14]=pc);
+
+}
